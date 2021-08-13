@@ -1,0 +1,5 @@
+﻿Name,Height (cm),End radius (cm),Middle radius (cm),Thickness (cm),Formula
+APJ AO Barrique,94,25.5,31.5,-,πH(3r²+4Rr+8R²)/15
+APJ AO Hogshead,102.5,28,36.25,-,πH(3r²+4Rr+8R²)/15
+Dargaud & Jaegle Bordeaux,94,25.75,31.8,2.7,πH(3r²+4Rr+8R²)/15
+Carwyn 2516,87,27.5,32.2,-,πH(3r²+4Rr+8R²)/15
