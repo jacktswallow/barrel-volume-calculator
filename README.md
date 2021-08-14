@@ -2,10 +2,11 @@
 Python application for calculating the volume of liquid in a barrel.
 
 ## Usage
-Add new barrels by adding a new row to the included barrels.csv file.
-Existing barrels may be edited by editing the existing rows in the barrels.csv file.
-Do not alter or delete the first row of the barrels.csv file.
-Do not rename the .csv file.
+- Add new barrels by adding a new row to the included barrels.csv file.
+- Existing barrels may be edited by editing the existing rows in the barrels.csv file.
+- Do not alter or delete the first row of the barrels.csv file.
+- Do not rename the .csv file.
+- The program must be closed and reopened for changes to the barrels.csv file to take effect.
 
 
 #### Variable formatting is as follows:
