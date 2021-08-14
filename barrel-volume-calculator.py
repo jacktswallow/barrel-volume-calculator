@@ -1,6 +1,8 @@
 import csv
 import os
 import math
+import numpy as np
+import numexpr as ne
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 #class for all barrel attributes
@@ -30,15 +32,33 @@ with open(fileName, newline='') as csvfile:
 
 def calculate(comboBoxIndex, dip):
     barrel = barrelList[comboBoxIndex]
+
+    #convert attributes to floats to allow for any adjustments
     #if thickness has been given, subtract it from height
     height  = float(barrel.height)
     if barrel.thickness != '-':
         height -= float(barrel.thickness) 
 
+    endRadius = float(barrel.endRadius)
     middleRadius = float(barrel.middleRadius) - dip
+    
+    #hardcoded equation
+    equation = "pi*H*(3*r**2+4*R*r+8*R**2)/15"
 
-    result = (math.pi * float(height) * ((3 * float(barrel.endRadius) ** 2) + (4 * float(barrel.endRadius) * float(middleRadius)) + (8 * float(middleRadius) ** 2)) / 15) / 1000
-    print(result)
+    #convert floats back to strings and substitute into equation
+    equation = equation.replace("H", str(height))
+    equation = equation.replace("r", str(endRadius))
+    equation = equation.replace("R", str(middleRadius))
+
+    # print(equation)
+    
+    #evaluate string supplying a definition for pi
+    result = ne.evaluate(equation, local_dict={'pi': math.pi}, global_dict={})
+
+    #convert to litres
+    result = result/1000
+
+    print(str(result))
     return result
     
 
