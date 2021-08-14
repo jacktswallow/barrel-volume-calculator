@@ -1,7 +1,6 @@
 import csv
 import os
 import math
-import numpy as np
 import numexpr as ne
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -31,37 +30,33 @@ with open(fileName, newline='') as csvfile:
         barrelList.append(barrel)
 
 def calculate(comboBoxIndex, dip):
+    #set barrel from selected index
     barrel = barrelList[comboBoxIndex]
 
     #convert attributes to floats to allow for any adjustments
-    #if thickness has been given, subtract it from height
     height  = float(barrel.height)
+    #if thickness has been given, subtract it from height
     if barrel.thickness != '-':
         height -= float(barrel.thickness) 
-
     endRadius = float(barrel.endRadius)
     middleRadius = float(barrel.middleRadius) - dip
     
-    #hardcoded equation
-    equation = "pi*H*(3*r**2+4*R*r+8*R**2)/15"
+    #retrieve formula for selected barrel
+    equation = barrel.formula
 
     #convert floats back to strings and substitute into equation
     equation = equation.replace("H", str(height))
     equation = equation.replace("r", str(endRadius))
     equation = equation.replace("R", str(middleRadius))
-
-    # print(equation)
     
-    #evaluate string supplying a definition for pi
+    #evaluate string and give definition for pi
     result = ne.evaluate(equation, local_dict={'pi': math.pi}, global_dict={})
 
     #convert to litres
     result = result/1000
 
-    print(str(result))
     return result
     
-
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -104,26 +99,8 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.label)
         self.lineEdit = QtWidgets.QLineEdit(self.attributeFrame_1)
         self.lineEdit.setObjectName("lineEdit")
-
-        # get line text
-        # dip = self.lineEdit.text
-        # print(self.lineEdit.text)
-
         self.horizontalLayout.addWidget(self.lineEdit)
         self.verticalLayout_4.addWidget(self.attributeFrame_1)
-        # self.attributeFrame_2 = QtWidgets.QFrame(self.inputFrame)
-        # self.attributeFrame_2.setFrameShape(QtWidgets.QFrame.NoFrame)
-        # self.attributeFrame_2.setFrameShadow(QtWidgets.QFrame.Raised)
-        # self.attributeFrame_2.setObjectName("attributeFrame_2")
-        # self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.attributeFrame_2)
-        # self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        # self.label_2 = QtWidgets.QLabel(self.attributeFrame_2)
-        # self.label_2.setObjectName("label_2")
-        # self.horizontalLayout_2.addWidget(self.label_2)
-        # self.lineEdit_2 = QtWidgets.QLineEdit(self.attributeFrame_2)
-        # self.lineEdit_2.setObjectName("lineEdit_2")
-        # self.horizontalLayout_2.addWidget(self.lineEdit_2)
-        # self.verticalLayout_4.addWidget(self.attributeFrame_2)
         self.verticalLayout.addWidget(self.inputFrame)
         self.calculateFrame = QtWidgets.QFrame(self.centralwidget)
         self.calculateFrame.setFrameShape(QtWidgets.QFrame.NoFrame)
@@ -168,7 +145,6 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Barrel Volume Calculator"))
         self.label.setText(_translate("MainWindow", "Dip (cm):"))
-        # self.label_2.setText(_translate("MainWindow", "TextLabel"))
         self.volumeLabel.setText(_translate("MainWindow", "Volume:"))
         self.volumeResultLabel.setText(_translate("MainWindow", "0.00L"))
         self.calculatePushButton.setText(_translate("MainWindow", "Calculate"))
@@ -178,14 +154,13 @@ class Ui_MainWindow(object):
 
         try:
             dip = float(lineText)
-            print("Positive float: " + str(dip))
+        except ValueError:
+            print("Enter a positive number")
+        else:
             comboBoxIndex = self.barrelSelectionComboBox.currentIndex()
             result = calculate(comboBoxIndex, dip)
             _translate = QtCore.QCoreApplication.translate
-            self.volumeResultLabel.setText(_translate("MainWindow", str(result)+"L"))
-        except ValueError:
-            print("Enter a positive number")
-        
+            self.volumeResultLabel.setText(_translate("MainWindow", str(round(result,2))+"L"))        
 
 
 if __name__ == "__main__":
@@ -196,7 +171,3 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
-
-
-
-
