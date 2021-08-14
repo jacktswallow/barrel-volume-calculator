@@ -34,28 +34,52 @@ def calculate(comboBoxIndex, dip):
     barrel = barrelList[comboBoxIndex]
 
     #convert attributes to floats to allow for any adjustments
-    height  = float(barrel.height)
-    #if thickness has been given, subtract it from height
-    if barrel.thickness != '-':
-        height -= float(barrel.thickness) 
-    endRadius = float(barrel.endRadius)
-    middleRadius = float(barrel.middleRadius) - dip
-    
-    #retrieve formula for selected barrel
-    equation = barrel.formula
+    try:
+        try:
+            height  = float(barrel.height)
+        except ValueError:
+            raise ValueError("In the .csv file 'H' must be set to a numerical value for the current barrel.")
+        try:
+            #if thickness has been given, subtract it from height
+            if barrel.thickness != '-':
+                height -= float(barrel.thickness) 
+        except ValueError:
+            raise ValueError("In the .csv file 'Thickness' must be set to '-' or a numerical value for the current barrel.")
+        try:
+            endRadius = float(barrel.endRadius)
+        except ValueError:
+            raise ValueError("In the .csv file 'r' must be set to a numerical value for the current barrel.")
+        try:
+            middleRadius = float(barrel.middleRadius)
+        except ValueError:
+            raise ValueError("In the .csv file 'R' must be set to a numerical value for the current barrel.")
+    except ValueError as e:
+        print(e)
+        return
+    else:       
+        #retrieve formula for selected barrel
+        equation = barrel.formula
 
-    #convert floats back to strings and substitute into equation
-    equation = equation.replace("H", str(height))
-    equation = equation.replace("r", str(endRadius))
-    equation = equation.replace("R", str(middleRadius))
-    
-    #evaluate string and give definition for pi
-    result = ne.evaluate(equation, local_dict={'pi': math.pi}, global_dict={})
+        #convert floats back to strings and substitute into equation
+        equation = equation.replace("H", str(height))
+        equation = equation.replace("r", str(endRadius))
+        equation = equation.replace("R", str(middleRadius))
+        equation = equation.replace("d", str(dip))
 
-    #convert to litres
-    result = result/1000
+        try:
+            #evaluate string and give definition for pi
+            result = ne.evaluate(equation, local_dict={'pi': math.pi}, global_dict={})
+        except KeyError:
+            print("Incorrect variable found in formula for the current barrel in the .csv file. Consult the README for formatting help.")
+            return
+        except TypeError:
+            print("Incorrect formatting found in formula for the current barrel in the .csv file. Consult the README for formatting help.")
+            return
+        else:
+            #convert to litres
+            result = result/1000
 
-    return result
+            return result
     
 
 class Ui_MainWindow(object):
@@ -150,17 +174,25 @@ class Ui_MainWindow(object):
         self.calculatePushButton.setText(_translate("MainWindow", "Calculate"))
 
     def calculateClicked(self):
+        #retrieve user input
         lineText = self.lineEdit.text()
 
+        #test input is both numerical and non-negative
         try:
             dip = float(lineText)
+            if(dip < 0):
+                raise ValueError('Negative number given')
         except ValueError:
             print("Enter a positive number")
         else:
+            #retrieve user barrel selection
             comboBoxIndex = self.barrelSelectionComboBox.currentIndex()
+            #calculate result, passing user inputs
             result = calculate(comboBoxIndex, dip)
-            _translate = QtCore.QCoreApplication.translate
-            self.volumeResultLabel.setText(_translate("MainWindow", str(round(result,2))+"L"))        
+            #if result was correctly calculated, set label to result
+            if result:
+                _translate = QtCore.QCoreApplication.translate
+                self.volumeResultLabel.setText(_translate("MainWindow", str(round(result,2))+"L"))        
 
 
 if __name__ == "__main__":
