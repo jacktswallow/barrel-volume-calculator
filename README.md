@@ -7,7 +7,8 @@ Existing barrels may be edited by editing the existing rows in the barrels.csv f
 Do not alter or delete the first row of the barrels.csv file.
 Do not rename the .csv file.
 
-Variable formatting is as follows:
+
+#### Variable formatting is as follows:
 - Height: Must be a numerical value.
 - End radius: Must be a numerical value.
 - Middle radius: Must be a numerical value.
@@ -18,7 +19,8 @@ Variable formatting is as follows:
   - When thickness is not given (denoted by '-'), height will not be altered.
     For example, a height of '94' and a thickness of '-' will result in a height of 94 being used in the calculation.
 
-Formula formatting is as follows:
+
+#### Formula formatting is as follows:
 - Accepted variables are as follows:
   - 'H' (Height) (cm)
   - 'r' (End radius) (cm)
