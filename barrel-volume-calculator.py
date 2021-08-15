@@ -2,7 +2,8 @@ import csv
 import os
 import math
 import numexpr as ne
-from PyQt5 import QtCore, QtGui, QtWidgets
+import sys
+from PyQt5 import QtCore, QtWidgets
 
 #class for all barrel attributes
 class Barrel:
@@ -13,25 +14,11 @@ class Barrel:
         self.middleRadius = middleRadius
         self.thickness = thickness
         self.formula = formula
-
-barrelList = []
-
-#get csv file name
-dirName = os.path.dirname(__file__)
-fileName = os.path.join(dirName, 'barrels.csv')
-
-#open csv
-with open(fileName, newline='') as csvfile:
-    reader = csv.reader(csvfile, delimiter=',', quotechar='|')
-    #iterate through csv rows, skipping the first row as it is the table header
-    next(reader)
-    for row in reader:
-        barrel = Barrel(row[0], row[1], row[2], row[3], row[4], row[5])
-        barrelList.append(barrel)
    
 
 class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
+    #create and specify attributes for window UI
+    def setupUi(self, MainWindow, barrelList):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(416, 383)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -39,6 +26,8 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.verticalLayout.setObjectName("verticalLayout")
+
+        #create combobox and frame
         self.barrelSelectionFrame = QtWidgets.QFrame(self.centralwidget)
         self.barrelSelectionFrame.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.barrelSelectionFrame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -48,32 +37,35 @@ class Ui_MainWindow(object):
         self.barrelSelectionComboBox = QtWidgets.QComboBox(self.barrelSelectionFrame)
         self.barrelSelectionComboBox.setObjectName("barrelSelectionComboBox")
         self.verticalLayout_2.addWidget(self.barrelSelectionComboBox)
+        self.verticalLayout.addWidget(self.barrelSelectionFrame, 0, QtCore.Qt.AlignTop)
 
         #add barrels to combobox
         for barrel in barrelList:
             self.barrelSelectionComboBox.addItem(barrel.name)
 
-        self.verticalLayout.addWidget(self.barrelSelectionFrame, 0, QtCore.Qt.AlignTop)
+        #create input field, label, and frame for dip measurement
         self.inputFrame = QtWidgets.QFrame(self.centralwidget)
         self.inputFrame.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.inputFrame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.inputFrame.setObjectName("inputFrame")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout(self.inputFrame)
         self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.attributeFrame_1 = QtWidgets.QFrame(self.inputFrame)
-        self.attributeFrame_1.setFrameShape(QtWidgets.QFrame.NoFrame)
-        self.attributeFrame_1.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.attributeFrame_1.setObjectName("attributeFrame_1")
-        self.horizontalLayout = QtWidgets.QHBoxLayout(self.attributeFrame_1)
+        self.dipInputFrame = QtWidgets.QFrame(self.inputFrame)
+        self.dipInputFrame.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.dipInputFrame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.dipInputFrame.setObjectName("dipInputFrame")
+        self.horizontalLayout = QtWidgets.QHBoxLayout(self.dipInputFrame)
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.label = QtWidgets.QLabel(self.attributeFrame_1)
+        self.label = QtWidgets.QLabel(self.dipInputFrame)
         self.label.setObjectName("label")
         self.horizontalLayout.addWidget(self.label)
-        self.lineEdit = QtWidgets.QLineEdit(self.attributeFrame_1)
+        self.lineEdit = QtWidgets.QLineEdit(self.dipInputFrame)
         self.lineEdit.setObjectName("lineEdit")
         self.horizontalLayout.addWidget(self.lineEdit)
-        self.verticalLayout_4.addWidget(self.attributeFrame_1)
+        self.verticalLayout_4.addWidget(self.dipInputFrame)
+        self.verticalLayout.addWidget(self.inputFrame)
         
+        #create frame and label for error messages
         self.errorFrame = QtWidgets.QFrame(self.inputFrame)
         self.errorFrame.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.errorFrame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -86,8 +78,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.addWidget(self.errorLabel)
         self.verticalLayout_4.addWidget(self.errorFrame)
 
-        self.verticalLayout.addWidget(self.inputFrame)
-
+        #create frame and labels for calculate button and result
         self.calculateFrame = QtWidgets.QFrame(self.centralwidget)
         self.calculateFrame.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.calculateFrame.setFrameShadow(QtWidgets.QFrame.Raised)
@@ -107,13 +98,16 @@ class Ui_MainWindow(object):
         self.volumeResultLabel.setObjectName("volumeResultLabel")
         self.horizontalLayout_3.addWidget(self.volumeResultLabel)
         self.verticalLayout_3.addWidget(self.resultFrame)
+
+        #create calculate button
         self.calculatePushButton = QtWidgets.QPushButton(self.calculateFrame)
         self.calculatePushButton.setObjectName("calculatePushButton")
         self.verticalLayout_3.addWidget(self.calculatePushButton)
 
         #connect pushbutton to function
-        self.calculatePushButton.clicked.connect(self.calculateClicked)
+        self.calculatePushButton.clicked.connect(lambda: self.calculateClicked(barrelList))
 
+        #set main window attributes and geometry
         self.verticalLayout.addWidget(self.calculateFrame, 0, QtCore.Qt.AlignBottom)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -127,6 +121,7 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+    #default qt dynamic language translation
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Barrel Volume Calculator"))
@@ -135,9 +130,16 @@ class Ui_MainWindow(object):
         self.volumeResultLabel.setText(_translate("MainWindow", "0.00L"))
         self.calculatePushButton.setText(_translate("MainWindow", "Calculate"))
 
-    def calculateClicked(self):
-        #remove previous error label
+    #handle the calculate button being clicked
+    def calculateClicked(self, barrelList):
+        #remove previous error label and reset result
         self.errorLabel.setText('')
+        self.volumeResultLabel.setText("0.0L")
+
+        #display error and return if .csv file has no barrels
+        if len(barrelList) <= 0:
+            self.errorLabel.setText('<font color="red">No barrels have been given in the .csv file. Consult the README for formatting help.</font>')
+            return
 
         #retrieve user input
         lineText = self.lineEdit.text()
@@ -154,17 +156,17 @@ class Ui_MainWindow(object):
             #retrieve user barrel selection
             comboBoxIndex = self.barrelSelectionComboBox.currentIndex()
             #calculate result, passing user inputs
-            result = self.calculate(comboBoxIndex, dip)
+            result = self.calculate(comboBoxIndex, dip, barrelList)
             #if result was correctly calculated, set label to result
             if result:
-                _translate = QtCore.QCoreApplication.translate
-                self.volumeResultLabel.setText(_translate("MainWindow", str(round(result,2))+"L"))
+                self.volumeResultLabel.setText(str(round(result,2))+"L")
 
-    def calculate(self, comboBoxIndex, dip):
+    #make calculation from values given in .csv file
+    def calculate(self, comboBoxIndex, dip, barrelList):
         #set barrel from selected index
         barrel = barrelList[comboBoxIndex]
 
-        #convert attributes to floats to allow for any adjustments
+        #convert attributes to floats to allow for any adjustments and ensure that they consist of numerical values only
         try:
             try:
                 height  = float(barrel.height)
@@ -188,7 +190,13 @@ class Ui_MainWindow(object):
             #display error
             self.errorLabel.setText('<font color="red">%s</font>' %e)
             return
-        else:       
+        else:
+
+            #check that dip measurement is not larger than the middle diameter of the barrel
+            if dip > middleRadius*2:
+                self.errorLabel.setText('<font color="red">Dip measurement cannot be larger than barrel depth (%scm)</font>' %str(middleRadius*2))
+                return
+
             #retrieve formula for selected barrel
             equation = barrel.formula
 
@@ -207,18 +215,43 @@ class Ui_MainWindow(object):
             except TypeError:
                 self.errorLabel.setText('<font color="red">Incorrect formatting found in formula for the current barrel in the .csv file. Consult the README for formatting help.</font>')
                 return
+            except SyntaxError:
+                self.errorLabel.setText('<font color="red">No formula has been given for the current barrel in the .csv file. Consult the README for formatting help.</font>')
             else:
                 #convert to litres
                 result = result/1000
 
                 return result
 
+#read in barrel attributes from .csv file and return a list of barrels
+def readFile():
+    #get csv file name
+    dirName = os.path.dirname(__file__)
+    fileName = os.path.join(dirName, 'barrels.csv')
 
-if __name__ == "__main__":
-    import sys
+    barrelList = []
+
+    #open csv
+    with open(fileName, newline='') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',', quotechar='|')
+        #iterate through csv rows, skipping the first row as it is the table header
+        next(reader)
+        #create barrel objects, supplying attributes from the .csv file
+        for row in reader:
+            barrel = Barrel(row[0], row[1], row[2], row[3], row[4], row[5])
+            barrelList.append(barrel)
+        
+    return barrelList
+
+
+def main():
+    barrelList = readFile()
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
+    ui.setupUi(MainWindow, barrelList)
     MainWindow.show()
     sys.exit(app.exec_())
+
+if __name__ == "__main__": 
+    main() 
